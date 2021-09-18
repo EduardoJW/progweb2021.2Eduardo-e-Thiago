@@ -17,12 +17,15 @@ def treatGET(fd):
 	data = fd.recv(1024)
 	string = string + str(data.decode())
 	
-	print("EIS A STRING:")
-	print(string)
-	print("FIM DA STRING")
-	print(len(string))
+    #utilidades para debug
+	#print("EIS A STRING:")
+	#print(string)
+	#print("FIM DA STRING")
+	#print(len(string))
 	
+    #check para evitar pedidos com tentativas invalidas
 	if len(string) != 0:
+        #check para evitar gets sem nome de arquivo
 		if string[4]+string[5] != "/ ":
 			i = 5
 			while string[i] != " ":
@@ -47,10 +50,11 @@ def treatGET(fd):
 				elif searchList[1] == "gif":
 					tipo = 5
 				else:
+                    #tipo invalido
 					tipo = -1
 					name = myconf.PATH+myconf.NOTFOUND
 			else:
-				
+				#não achou o arquivo
 				
 					
 				tipo = -1
@@ -59,7 +63,7 @@ def treatGET(fd):
 			
 			print("END TREAT GET")
 		else:	
-			#print("TESTEEEEEEEEE")
+            #caso dos arquivos default
 			tipo = 0
 			for i in range(5):
 				name = ""
@@ -71,9 +75,11 @@ def treatGET(fd):
 					break
 					
 			if tipo == 0:
+                #passou por todos os default e deu 404
 				name = myconf.PATH+myconf.NOTFOUND
 				tipo = -1
 	else:
+        #caso da tentativa invalida
 		tipo = -2
 		name = None
 	
@@ -127,9 +133,9 @@ def carregaPagina(fd):
 	
 	
 	filename, filetype = treatGET(fd)
-	
+	#trata os casos dependendo do tipo [html=1,js=2,jpg=3,png=4,gif=5,notfound=-1,tentativa invalida=-2]
 	if filetype == 1:
-		#filename = "test.html"
+		#abre o arquivo html
 		f = open(filename, "r")
 		
 		fd.sendall(str.encode("HTTP/1.1 200 OK\n", 'iso-8859-1'))
@@ -145,6 +151,7 @@ def carregaPagina(fd):
 		
 		fd.close()
 	elif filetype == 2:
+        #abre o arquivo javascript
 		f = open(filename, "r")
 		
 		fd.sendall(str.encode("HTTP/1.1 200 OK\n", 'iso-8859-1'))
@@ -162,6 +169,7 @@ def carregaPagina(fd):
 		
 		
 	elif filetype == 3:
+        #abre o arquivo jpg
 		f = open(filename, "rb")
 		
 		fd.sendall(str.encode("HTTP/1.1 200 OK\n", 'iso-8859-1'))
@@ -176,6 +184,7 @@ def carregaPagina(fd):
 	
 		fd.close()
 	elif filetype == 4:
+        #abre o arquivo png
 		f = open(filename, "rb")
 		
 		fd.sendall(str.encode("HTTP/1.1 200 OK\n", 'iso-8859-1'))
@@ -190,6 +199,7 @@ def carregaPagina(fd):
 	
 		fd.close()
 	elif filetype == 5:
+        #abre o arquivo gif
 		f = open(filename, "rb")
 		
 		fd.sendall(str.encode("HTTP/1.1 200 OK\n", 'iso-8859-1'))
@@ -197,7 +207,6 @@ def carregaPagina(fd):
 		
 		fd.send(str.encode('\r\n'))
 		
-		#fd.recv(1000000)
 		for data in f:
 			fd.sendall(data)
 		
@@ -206,7 +215,7 @@ def carregaPagina(fd):
 		fd.close()
 		
 	elif filetype == -1:
-		#filename = "notfound.html"
+		#abre o arquivo de 404 das configs
 		f = open(filename, "r")
 		
 		fd.sendall(str.encode("HTTP/1.1 404 Not Found\n", 'iso-8859-1'))
@@ -222,35 +231,22 @@ def carregaPagina(fd):
 		
 		fd.close()
 	elif filetype == -2:
+        #deixa no servidor uma mensagem do acesso não identificado, mas não envia ao cliente
 		print("Tentativa de acesso não identificada.")
-	#elif filetype == -2:
-		#print("ARGUMENTO")
-		#while True:
-			#data = fd.recv(1024)
-			#if not data:
-			#	break
-				
-			#print(data.decode())	
-		#print("END")
 	return
 	
 
 	
 
 def main():
-	#if len(argv) == 2:
-		#porta = int(argv[1])
-	#else:
-		#porta = 8080
-	#if len(argv) == 2:
-		#print("TEXTOOOOOOO")
-	
-	
+
+    #inicializa as configurações
 	porta = myconf.PORT
 	enderecoHost = getEnderecoHost(porta)
 	fd = criaSocket(enderecoHost)
 	setModo(fd)
 	bindaSocket(fd,porta)
+    #faz o fork 
 	newpid = os.fork()
 	print("Servidor pronto em", enderecoHost)
 	escuta(fd)
